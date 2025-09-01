@@ -10,6 +10,8 @@ export const listNumbers = query({
   // Validators for arguments.
   args: {
     count: v.number(),
+    // Some environments may send a display-only anonymous name along with args; ignore it.
+    anonName: v.optional(v.string()),
   },
 
   // Query implementation.
