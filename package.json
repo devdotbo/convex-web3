@@ -16,9 +16,11 @@
     "@reown/appkit-adapter-wagmi": "^1.8.1",
     "@tanstack/react-query": "^5.85.6",
     "convex": "^1.26.0",
+    "jose": "^6.1.0",
     "next": "15.2.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "siwe": "^3.0.0",
     "viem": "^2.36.0",
     "wagmi": "^2.16.9"
   },
