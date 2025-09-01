@@ -76,15 +76,15 @@ Open `http://localhost:3000` and click the `<appkit-button />` to connect and si
 
 ```mermaid
 flowchart TD
-  A[Wallet Connect + Sign via AppKit] --> B[/SIWX nonce GET\n/api/siwx/nonce/]
-  B --> C[Client signs message]
-  C --> D[/Verify POST\n/api/siwx/verify/]
-  D -->|verifyMessage + claims| E[Sign ES256 JWT]
-  E -->|HttpOnly cookie| F[(auth_token)]
-  F --> G[Convex Client\nsetAuth() -> /api/auth/token]
-  G --> H[/JWKS GET\n/api/auth/jwks]
-  H --> I[Convex customJwt\nverify against JWKS]
-  I --> J[Authorized Convex functions]
+  A["Wallet connect + sign via AppKit"] --> B["SIWX nonce GET<br/>/api/siwx/nonce"]
+  B --> C["Client signs message"]
+  C --> D["Verify POST<br/>/api/siwx/verify"]
+  D -->|verifyMessage + claims| E["Sign ES256 JWT"]
+  E -->|HttpOnly cookie| F["auth_token cookie"]
+  F --> G["Convex client<br/>setAuth via /api/auth/token"]
+  G --> H["JWKS GET<br/>/api/auth/jwks"]
+  H --> I["Convex customJwt<br/>verify against JWKS"]
+  I --> J["Authorized Convex functions"]
 ```
 
 Key pieces:
