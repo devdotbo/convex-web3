@@ -9,4 +9,8 @@ export default defineSchema({
   numbers: defineTable({
     value: v.number(),
   }),
+  checkboxes: defineTable({
+    idx: v.number(),
+    boxes: v.bytes(),
+  }).index("idx", ["idx"]),
 });
