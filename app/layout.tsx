@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
+import AuthSync from "@/components/AuthSync";
 import { headers } from "next/headers";
 import ContextProvider from "@/context";
 
@@ -37,7 +38,10 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ContextProvider cookies={cookies}>
-          <ConvexClientProvider>{children}</ConvexClientProvider>
+          <ConvexClientProvider>
+            <AuthSync />
+            {children}
+          </ConvexClientProvider>
         </ContextProvider>
       </body>
     </html>
