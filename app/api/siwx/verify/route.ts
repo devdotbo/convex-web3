@@ -36,7 +36,10 @@ export async function POST(req: Request) {
         }
         address = siwe.address;
         chainId = typeof siwe.chainId === 'string' ? siwe.chainId : Number(siwe.chainId);
+        console.log("SIWX verification success. no fallback needed.", address, chainId);
       } catch (e) {
+        console.error("SIWX verification failed", e);
+        console.log("fallback to verifyMessage");
         // Fallback: verify raw message signature and minimally validate fields
         const ok = await verifyMessage({
           address: session.data.accountAddress as `0x${string}`,
