@@ -56,7 +56,8 @@ export default function AuthWatcher() {
 
   // Also react to AppKit events (e.g., wallet modal Disconnect)
   useEffect(() => {
-    const evt = (events as any)?.data?.event as string | undefined;
+    type AppKitEvent = { data?: { event?: string } };
+    const evt = (events as AppKitEvent | undefined)?.data?.event;
     if (!evt) return;
     if (evt === "DISCONNECT_SUCCESS") {
       (async () => {
