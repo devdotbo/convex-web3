@@ -1,30 +1,20 @@
-import { v } from "convex/values";
-import { query as rawQuery, mutation as rawMutation, internalMutation as rawInternalMutation } from "./_generated/server";
-import { customQuery, customMutation, customInternalMutation } from "convex-helpers/server/customFunctions";
+import { query as rawQuery, mutation as rawMutation } from "./_generated/server";
+import { customQuery, customMutation } from "convex-helpers/server/customFunctions";
 
-// Extend ctx with an `userIdentity` loaded once for convenience
-type AuthedCtx<Ctx> = Ctx & { userIdentity: Awaited<ReturnType<Ctx["auth"]["getUserIdentity"]>> };
-
-const withIdentity = async <Ctx extends { auth: { getUserIdentity: () => Promise<any> } }>(
-  ctx: Ctx,
-) => {
+// Attach `userIdentity` once per invocation for convenience
+const withIdentity = async (ctx: { auth: { getUserIdentity: () => Promise<unknown> } }) => {
   const userIdentity = await ctx.auth.getUserIdentity();
-  return { ctx: { ...(ctx as any), userIdentity }, args: {} } as { ctx: AuthedCtx<Ctx>; args: {} };
+  return { ctx: { ...(ctx as any), userIdentity }, args: {} } as { ctx: typeof ctx & { userIdentity: unknown }; args: {} };
 };
 
 export const authedQuery = customQuery(rawQuery, {
   args: {},
-  input: async (ctx) => withIdentity(ctx),
+  input: async (ctx) => withIdentity(ctx as any),
 });
 
 export const authedMutation = customMutation(rawMutation, {
   args: {},
-  input: async (ctx) => withIdentity(ctx),
-});
-
-export const authedInternalMutation = customInternalMutation(rawInternalMutation, {
-  args: {},
-  input: async (ctx) => withIdentity(ctx),
+  input: async (ctx) => withIdentity(ctx as any),
 });
 
 // A tiny helper validator to require auth in handlers when needed
