@@ -3,12 +3,15 @@
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import Link from "next/link";
+import DisconnectButton from "@/components/DisconnectButton";
+import { useAppKitAccount } from "@reown/appkit/react";
 
 export default function Home() {
   return (
     <>
       <header className="sticky top-0 z-10 bg-background p-4 border-b-2 border-slate-200 dark:border-slate-800 flex flex-row justify-between items-center">
-        Convex + Next.js
+        <span>Convex + Next.js</span>
+        <DisconnectButton />
       </header>
       <main className="p-8 flex flex-col gap-16">
         <h1 className="text-4xl font-bold text-center">Convex + Next.js</h1>
@@ -22,9 +25,13 @@ export default function Home() {
 }
 
 function Content() {
+  const { isConnected, address, caipAddress, status } = useAppKitAccount();
+  // Use account/connection state to force query key changes on connect/disconnect/account switch
+  const anonKey = isConnected ? (caipAddress || address || "connected") : `disconnected:${status}`;
   const { viewer, numbers } =
     useQuery(api.myFunctions.listNumbers, {
       count: 10,
+      anonName: anonKey,
     }) ?? {};
   const addNumber = useMutation(api.myFunctions.addNumber);
 
@@ -46,15 +53,15 @@ function Content() {
       <p>
         <button
           className="bg-foreground text-background text-sm px-4 py-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={!viewer}
+          disabled={!isConnected}
           onClick={() => {
-            if (!viewer) return;
+            if (!isConnected) return;
             void addNumber({ value: Math.floor(Math.random() * 10) });
           }}
         >
           Add a random number
         </button>
-        {!viewer && (
+        {!isConnected && (
           <span className="ml-2 text-xs opacity-70">Sign in to add numbers</span>
         )}
       </p>
