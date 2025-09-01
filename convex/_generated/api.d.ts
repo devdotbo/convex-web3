@@ -14,6 +14,7 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as checkboxes from "../checkboxes.js";
+import type * as custom from "../custom.js";
 import type * as myFunctions from "../myFunctions.js";
 
 /**
@@ -26,6 +27,7 @@ import type * as myFunctions from "../myFunctions.js";
  */
 declare const fullApi: ApiFromModules<{
   checkboxes: typeof checkboxes;
+  custom: typeof custom;
   myFunctions: typeof myFunctions;
 }>;
 export declare const api: FilterApi<

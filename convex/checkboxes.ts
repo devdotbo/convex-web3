@@ -1,6 +1,7 @@
 import { v } from "convex/values";
-import { query, mutation, internalMutation } from "./_generated/server";
+import { query, internalMutation } from "./_generated/server";
 import { api, internal } from "./_generated/api";
+import { authedMutation, requireUser } from "./custom";
 const NUM_BOXES = 1000000;
 const BOXES_PER_DOCUMENT = 4000;
 const NUM_DOCUMENTS = Math.floor(NUM_BOXES / BOXES_PER_DOCUMENT);
@@ -56,14 +57,11 @@ export const get = query({
   },
 });
 
-export const toggle = mutation({
+export const toggle = authedMutation({
   args: { documentIdx: v.number(), arrayIdx: v.number(), checked: v.boolean() },
   returns: v.null(),
   handler: async (ctx, { documentIdx, arrayIdx, checked }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
+    requireUser(ctx.userIdentity);
     if (documentIdx < 0 || documentIdx >= NUM_DOCUMENTS) {
       throw new Error("documentIdx out of range");
     }
@@ -94,14 +92,11 @@ export const toggle = mutation({
   },
 });
 
-export const ensureSeeded = mutation({
+export const ensureSeeded = authedMutation({
   args: {},
   returns: v.null(),
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
+    requireUser(ctx.userIdentity);
     const exists = await ctx.db
       .query("checkboxes")
       .withIndex("idx", (q) => q.eq("idx", 0))
