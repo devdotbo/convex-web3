@@ -1,0 +1,488 @@
+# SIWX Implementation
+
+# SIWX Custom Usage
+
+The Sign In With X feature enables decentralized applications (Dapps) to authenticate users seamlessly across multiple blockchain networks, such as Ethereum, Polygon or Solana.
+The user can connect and then sign a message with their account to prove ownership of the account.
+
+## DefaultSIWX Implementation
+
+Here is a quick guide to get started with a custom **SIWX** feature using the `DefaultSIWX` class.
+
+### Example
+
+<Card title="Next.js MultiChain SIWX Default Example" icon="github" href="https://github.com/reown-com/appkit-web-examples/blob/main/nextjs/next-siwx-multichain/">
+  Check the Next.js example using DefaultSIWX in a multi-chain environment
+</Card>
+
+### Installation
+
+<CodeGroup>
+  ```bash npm
+  npm install @reown/appkit-siwx
+  ```
+
+  ```bash Yarn
+  yarn add @reown/appkit-siwx
+  ```
+
+  ```bash Bun
+  bun a @reown/appkit-siwx
+  ```
+
+  ```bash pnpm
+  pnpm add @reown/appkit-siwx
+  ```
+</CodeGroup>
+
+### Usage
+
+```ts {2-3, 9-10}
+import { createAppKit } from '@reown/appkit'
+// Add the following code line
+import { DefaultSIWX } from '@reown/appkit-siwx'
+
+const appkit = createAppKit({
+  projectId,
+  networks,
+  metadata,
+  // Add the following code line
+  siwx: new DefaultSIWX() // add this line to enable SIWX
+})
+```
+
+You should now have the **SIWX** feature up and running in your Dapp.
+
+The `ReownAuthentication` configuration will use the predefined components to handle the message generation, verification and storage of the sessions. You can customize the default implementation by providing your own components as in the following sections.
+
+## Customizing the DefaultSIWX Class
+
+The `DefaultSIWX` class is divided in three main components: `SIWXMessenger`, `SIWXVerifier` and `SIWXStorage`. The `@reown/appkit-siwx` package have defined options to fulfill the parts when initializing the `DefaultSIWX` configuration and you are also able to setup your own parts as required.
+
+### Predefined Components
+
+The `@reown/appkit-siwx` package provides some predefined components that you can use to quickly setup the `DefaultSIWX` configuration.
+
+Check the latest components over the [SIWX repository](https://github.com/reown-com/appkit/tree/main/packages/siwx)
+
+#### Customizing components
+
+You may provide the parts to the `DefaultSIWX` configuration using the predefined components exposed by `@reown/appkit-siwx` package and customize the component params as needed.
+
+```ts
+import {
+  DefaultSIWX,
+  InformalMessenger,
+  EIP155Verifier,
+  SolanaVerifier,
+  LocalStorage
+} from '@reown/appkit-siwx'
+
+const siwx = new DefaultSIWX({
+  messenger: new InformalMessenger({
+    domain: 'reown.com',
+    uri: 'https://reown.com',
+    getNonce: async () => Math.round(Math.random() * 10000).toString()
+  }),
+  verifiers: [new EIP155Verifier(), new SolanaVerifier()],
+  storage: new LocalStorage({ key: '@appkit/siwx' })
+})
+```
+
+### Custom Components
+
+You may create your own components to handle the message generation, verification and storage of the sessions. The following sections will guide you through the process of creating your own components.
+
+#### `SIWXMessenger`
+
+The [`SIWXMessenger`](https://github.com/reown-com/appkit/blob/main/packages/siwx/src/core/SIWXMessenger.ts) is an abstract class which holds methods for generating the message to be signed.
+
+##### Creating a Custom Messenger:
+
+You may extend the `SIWXMessenger` class adding the public attributes:
+
+* `version`: a string that represents the version of the messenger;
+* `stringify`: a method that receives the message data and returns a string to be signed.
+
+```ts
+import { SIWXMessenger } from '@reown/appkit-siwx'
+import type { SIWXMessage } from '@reown/appkit-core'
+
+export class MyMessenger extends SIWXMessenger {
+  protected readonly version = '1'
+
+  protected override stringify(params: SIWXMessage.Data): string {
+    // Implement your message format here
+    return `My message for ${params.accountAddress} on ${params.chainId}`
+  }
+}
+```
+
+#### `SIWXVerifier`
+
+The [`SIWXVerifier`](https://github.com/reown-com/appkit/blob/main/packages/siwx/src/core/SIWXVerifier.ts) is an abstract class that defines the verification logic for the signed message.
+
+##### Creating a Custom Verifier:
+
+You may extend the `SIWXVerifier` class adding the public attributes:
+
+* `chainNamespace`: a string that represents the chain namespace for the verifier;
+* `verify`: a method that receives the session data and returns a boolean indicating if the session is valid.
+
+```ts
+import { SIWXVerifier } from '@reown/appkit-siwx'
+import type { SIWXSession } from '@reown/appkit-core'
+
+export class MyVerifier extends SIWXVerifier {
+  public readonly chainNamespace = 'eip155' // set the chain namespace for your verifier
+
+  public async verify(session: SIWXSession): Promise<boolean> {
+    // Implement your verification logic here
+    return true
+  }
+}
+```
+
+#### `SIWXStorage`
+
+<Card title="Next.js SIWX Default Example with supabase storage" icon="github" href="https://github.com/reown-com/appkit-web-examples/tree/main/nextjs/next-siwx-multichain-supabase-storage">
+  Check the Next.js example using DefaultSIWX and supabase as default storage
+</Card>
+
+[`SIWXStorage`](https://github.com/reown-com/appkit/blob/main/packages/siwx/src/core/SIWXStorage.ts) is a interface that defines how the session data will be stored.
+
+##### Creating a Custom Storage:
+
+You may implement the `SIWXStorage` interface with the following methods:
+
+* `add`: This method will be called to store a new single session that is verified;
+* `set`: This method must replace all the sessions in the storage with the new ones;
+* `get`: This method must return all the sessions stored for a specific chain and address. Is expected that the sessions are already verified;
+* `delete`: This method must delete all the sessions stored for a specific chain and address.
+
+```ts
+import type { SIWXSession } from '@reown/appkit-core'
+import type { SIWXStorage } from '@reown/appkit-siwx'
+
+export class MyStorage implements SIWXStorage {
+  add(session: SIWXSession): Promise<void> {
+    // Implement your logic to add a session
+  }
+
+  set(sessions: SIWXSession[]): Promise<void> {
+    // Implement your logic to set sessions
+  }
+
+  get(chainId: CaipNetworkId, address: string): Promise<SIWXSession[]> {
+    // Implement your logic to get sessions
+    return []
+  }
+
+  delete(chainId: string, address: string): Promise<void> {
+    // Implement your logic to delete a session
+  }
+}
+```
+
+#### Using custom components
+
+You may provide your custom components to the `DefaultSIWX` configuration.
+
+If you omit any of the components, the default implementation will be used. Check [here](https://github.com/reown-com/appkit/blob/main/packages/siwx/src/configs/DefaultSIWX.ts) the default components.
+
+```ts
+import { DefaultSIWX, type SIWXStorage } from '@reown/appkit-siwx'
+
+class MyDatabaseStorage implements SIWXStorage {
+  // ...
+}
+
+const siwx = new DefaultSIWX({
+  storage: new MyDatabaseStorage()
+})
+```
+
+Beyond the recommended [Reown Authentication](./reown-authentication) and DefaultSIWX, you can create your own implementation of the **SIWX** feature to suit your specific requirements.
+
+## SIWX Full Custom Implementation
+
+**SIWX** is developed to work as a plugin system for AppKit and to enable correctly it you need to fulfill the expected interface within the `createAppKit` function.
+
+### SIWXConfig interface
+
+This is the interface that you need to implement to create your own **SIWX** feature.
+
+```ts
+interface SIWXConfig {
+  createMessage: (input: SIWXMessage.Input) => Promise<SIWXMessage>
+  addSession: (session: SIWXSession) => Promise<void>
+  revokeSession: (chainId: CaipNetworkId, address: string) => Promise<void>
+  setSessions: (sessions: SIWXSession[]) => Promise<void>
+  getSessions: (chainId: CaipNetworkId, address: string) => Promise<SIWXSession[]>
+  getRequired?: () => boolean
+  signOutOnDisconnect?: boolean
+}
+```
+
+All the typings used are exposed by `@reown/appkit-core` package. You may check the source code [here](https://github.com/reown-com/appkit/blob/main/packages/core/src/utils/SIWXUtil.ts).
+
+<Accordion title="Full Detailed Interfaces">
+  ```typescript
+  /**
+   * This interface represents the SIWX configuration plugin, which is used to create and manage SIWX messages and sessions.
+   * AppKit provides predefined implementations for this interface through `@reown/appkit-siwx`.
+   * You may use it to create a custom implementation following your needs, but watch close for the methods requirements.
+   */
+  export interface SIWXConfig {
+    /**
+     * This method will be called to create a new message to be signed by the user.
+     *
+     * Constraints:
+     * - The message MUST be unique and contain all the necessary information to verify the user's identity.
+     * - SIWXMessage.toString() method MUST be implemented to return the message string.
+     *
+     * @param input SIWXMessage.Input
+     * @returns SIWXMessage
+     */
+    createMessage: (input: SIWXMessage.Input) => Promise<SIWXMessage>
+
+    /**
+     * This method will be called to store a new single session.
+     *
+     * Constraints:
+     * - This method MUST verify if the session is valid and store it in the storage successfully.
+     *
+     * @param session SIWXSession
+     */
+    addSession: (session: SIWXSession) => Promise<void>
+
+    /**
+     * This method will be called to revoke all the sessions stored for a specific chain and address.
+     *
+     * Constraints:
+     * - This method MUST delete all the sessions stored for the specific chain and address successfully.
+     *
+     * @param chainId CaipNetworkId
+     * @param address string
+     */
+    revokeSession: (chainId: CaipNetworkId, address: string) => Promise<void>
+
+    /**
+     * This method will be called to replace all the sessions in the storage with the new ones.
+     *
+     * Constraints:
+     * - This method MUST verify all the sessions before storing them in the storage;
+     * - This method MUST replace all the sessions in the storage with the new ones succesfully otherwise it MUST throw an error.
+     *
+     * @param sessions SIWXSession[]
+     */
+    setSessions: (sessions: SIWXSession[]) => Promise<void>
+
+    /**
+     * This method will be called to get all the sessions stored for a specific chain and address.
+     *
+     * Constraints:
+     * - This method MUST return only sessions that are verified and valid;
+     * - This method MUST NOT return expired sessions.
+     *
+     * @param chainId CaipNetworkId
+     * @param address string
+     * @returns
+     */
+    getSessions: (chainId: CaipNetworkId, address: string) => Promise<SIWXSession[]>
+
+    /**
+     * This method determines whether the wallet stays connected when the user denies the signature request.
+     *
+     * @returns {boolean}
+     */
+    getRequired?: () => boolean
+
+    /**
+     * This method determines whether the session should be cleared when the user disconnects.
+     *
+     * @default true
+     * @returns {boolean}
+     */
+    signOutOnDisconnect?: boolean
+  }
+
+  /**
+   * This interface represents a SIWX session, which is used to store the user's identity information.
+   */
+  export interface SIWXSession {
+    data: SIWXMessage.Data
+    message: string
+    signature: string
+    cacao?: Cacao
+  }
+
+  /**
+   * This interface represents a SIWX message, which is used to create a message to be signed by the user.
+   * This must contain the necessary information to verify the user's identity and how to generate the string message.
+   */
+  export interface SIWXMessage extends SIWXMessage.Data, SIWXMessage.Methods {}
+
+  export namespace SIWXMessage {
+    /**
+     * This interface represents the SIWX message data, which is used to create a message to be signed by the user.
+     */
+    export interface Data extends Input, Metadata, Identifier {}
+
+    /**
+     * This interface represents the SIWX message input.
+     * Here must contain what is different for each user of the application.
+     */
+    export interface Input {
+      accountAddress: string
+      chainId: CaipNetworkId
+      notBefore?: Timestamp
+    }
+
+    /**
+     * This interface represents the SIWX message metadata.
+     * Here must contain the main data related to the app.
+     */
+    export interface Metadata {
+      domain: string
+      uri: string
+      version: string
+      nonce: string
+      statement?: string
+      resources?: string[]
+    }
+
+    /**
+     * This interface represents the SIWX message identifier.
+     * Here must contain the request id and the timestamps.
+     */
+    export interface Identifier {
+      requestId?: string
+      issuedAt?: Timestamp
+      expirationTime?: Timestamp
+    }
+
+    /**
+     * This interface represents the SIWX message methods.
+     * Here must contain the method to generate the message string and any other method performed by the SIWX message.
+     */
+    export interface Methods {
+      toString: () => string
+    }
+
+    /**
+     * The timestamp is a UTC string representing the time in ISO 8601 format.
+     */
+    export type Timestamp = string
+  }
+
+  /**
+   * The Cacao interface is a reference of CAIP-74 and represents a chain-agnostic Object Capability (OCAP).
+   * https://chainagnostic.org/CAIPs/caip-74
+   */
+  export interface Cacao {
+    h: Cacao.Header
+    p: Cacao.Payload
+    s: {
+      t: 'eip191' | 'eip1271'
+      s: string
+      m?: string
+    }
+  }
+
+  export namespace Cacao {
+    export interface Header {
+      t: 'caip122'
+    }
+
+    export interface Payload {
+      domain: string
+      aud: string
+      nonce: string
+      iss: string
+      version?: string
+      iat?: string
+      nbf?: string
+      exp?: string
+      statement?: string
+      requestId?: string
+      resources?: string[]
+      type?: string
+    }
+  }
+  ```
+</Accordion>
+
+### Constraints
+
+You are able to implement the `SIWXConfig` in the way you would like, but some constraints MUST be followed to make sure that AppKit can interact with it correctly and it will work as expected:
+
+#### `createMessage`
+
+This method will be called to create a new message to be signed by the user.
+
+* The message MUST be unique and contain all the necessary information to verify the user's identity.
+
+#### `addSession`
+
+This method will be called to store a new single session.
+
+* This method MUST verify if the session is valid and store it in the storage successfully.
+
+#### `revokeSession`
+
+This method will be called to revoke all the sessions stored for a specific chain and address.
+
+* This method MUST delete all the sessions stored for the specific chain and address successfully.
+
+#### `setSessions`
+
+This method will be called to replace all the sessions in the storage with the new ones.
+
+* This method MUST verify all the sessions before storing them in the storage;
+* This method MUST replace all the sessions in the storage with the new ones successfully otherwise it MUST throw an error.
+
+#### `getSessions`
+
+This method will be called to get all the sessions stored for a specific chain and address.
+
+* This method MUST return only sessions that are verified and valid;
+* This method MUST NOT return expired sessions.
+
+### Example
+
+Here is an example of how you can implement use your `SIWXConfig` interface:
+
+```typescript
+import { createAppKit, type SIWXConfig } from '@reown/appkit'
+
+const siwx: SIWXConfig = {
+  createMessage: async (input) => {
+    // Implement your logic to create a message
+    return 'my message'
+  }
+  addSession: async (session) => {
+    // Implement your logic to add a session
+  },
+  revokeSession: async (chainId, address) => {
+    // Implement your logic to revoke a session
+  },
+  setSessions: async (sessions) => {
+    // Implement your logic to set sessions
+  },
+  getSessions: async (chainId, address) => {
+    // Implement your logic to get sessions
+    return []
+  },
+  getRequired: () => {
+    // Return whether the wallet should stay connected when user denies signature
+    return false
+  },
+  signOutOnDisconnect: true // Whether to clear sessions when user disconnects
+}
+
+createAppKit({
+  // ... your configuration
+  siwx
+})
+```
