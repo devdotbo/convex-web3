@@ -1,6 +1,7 @@
 import { v } from "convex/values";
-import { query, mutation, action } from "./_generated/server";
+import { query, action } from "./_generated/server";
 import { api } from "./_generated/api";
+import { authedMutation, requireUser } from "./custom";
 
 // Write your Convex functions in any file inside this directory (`convex`).
 // See https://docs.convex.dev/functions for more.
@@ -32,7 +33,7 @@ export const listNumbers = query({
 });
 
 // You can write data to the database via a mutation:
-export const addNumber = mutation({
+export const addNumber = authedMutation({
   // Validators for arguments.
   args: {
     value: v.number(),
@@ -40,10 +41,7 @@ export const addNumber = mutation({
 
   // Mutation implementation.
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
+    requireUser((ctx as any).userIdentity);
 
     const id = await ctx.db.insert("numbers", { value: args.value });
 
