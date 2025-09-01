@@ -32,7 +32,7 @@ async function ensureKey(): Promise<PrivateJwk> {
     }
   }
 
-  const { privateKey } = await generateKeyPair("ES256");
+  const { privateKey } = await generateKeyPair("ES256", { extractable: true });
   const priv = (await exportJWK(privateKey)) as PrivateJwk;
   priv.kid = DEFAULT_KID;
   // Store only private; public part will be derived on demand
