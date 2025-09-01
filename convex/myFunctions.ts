@@ -24,7 +24,8 @@ export const listNumbers = query({
       .order("desc")
       .take(args.count);
     return {
-      viewer: (await ctx.auth.getUserIdentity())?.name ?? null,
+      // Treat any authenticated identity as a viewer; use subject (e.g., eip155:1:0x...)
+      viewer: (await ctx.auth.getUserIdentity())?.subject ?? null,
       numbers: numbers.reverse().map((number) => number.value),
     };
   },

@@ -45,13 +45,18 @@ function Content() {
       </p>
       <p>
         <button
-          className="bg-foreground text-background text-sm px-4 py-2 rounded-md"
+          className="bg-foreground text-background text-sm px-4 py-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={!viewer}
           onClick={() => {
+            if (!viewer) return;
             void addNumber({ value: Math.floor(Math.random() * 10) });
           }}
         >
           Add a random number
         </button>
+        {!viewer && (
+          <span className="ml-2 text-xs opacity-70">Sign in to add numbers</span>
+        )}
       </p>
       <p>
         Numbers:{" "}

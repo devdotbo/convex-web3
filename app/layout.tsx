@@ -4,6 +4,7 @@ import "./globals.css";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { headers } from "next/headers";
 import ContextProvider from "@/context";
+import AuthWatcher from "@/components/AuthWatcher";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,6 +39,7 @@ export default async function RootLayout({
       >
         <ContextProvider cookies={cookies}>
           <ConvexClientProvider>
+            <AuthWatcher />
             {children}
           </ConvexClientProvider>
         </ContextProvider>

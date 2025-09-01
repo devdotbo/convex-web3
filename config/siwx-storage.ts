@@ -68,6 +68,8 @@ export class JwtCookieStorage implements SIWXStorage {
     await this.local.delete(chainId, address)
     try {
       await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+      // Immediately clear Convex auth so mutations/queries require re-auth without page reload
+      await convex.setAuth(async () => null)
     } catch {
       // ignore
     }
