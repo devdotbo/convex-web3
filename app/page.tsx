@@ -3,6 +3,7 @@
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import Link from "next/link";
+import SiwxSignIn from "./components/SiwxSignIn";
 
 export default function Home() {
   return (
@@ -15,6 +16,7 @@ export default function Home() {
         <div className="mx-auto">
           <appkit-button />
         </div>
+        <SiwxSignIn />
         <Content />
       </main>
     </>
