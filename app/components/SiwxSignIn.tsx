@@ -20,7 +20,7 @@ export default function SiwxSignIn() {
         return;
       }
 
-      const domain = window.location.host;
+      const domain = window.location.hostname;
       const origin = window.location.origin;
 
       const message = new SiweMessage({
@@ -43,6 +43,7 @@ export default function SiwxSignIn() {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ message: prepared, signature }),
+        credentials: "include",
       });
 
       if (!verifyRes.ok) {
