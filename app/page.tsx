@@ -12,6 +12,9 @@ export default function Home() {
       </header>
       <main className="p-8 flex flex-col gap-16">
         <h1 className="text-4xl font-bold text-center">Convex + Next.js</h1>
+        <div className="mx-auto">
+          <appkit-button />
+        </div>
         <Content />
       </main>
     </>

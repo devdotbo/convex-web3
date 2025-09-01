@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
+import { headers } from "next/headers";
+import ContextProvider from "@/context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,17 +23,22 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headersObj = await headers();
+  const cookies = headersObj.get('cookie');
+
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ConvexClientProvider>{children}</ConvexClientProvider>
+        <ContextProvider cookies={cookies}>
+          <ConvexClientProvider>{children}</ConvexClientProvider>
+        </ContextProvider>
       </body>
     </html>
   );
