@@ -23,7 +23,9 @@
     "react-dom": "^19.0.0",
     "siwe": "^3.0.0",
     "viem": "^2.36.0",
-    "wagmi": "^2.16.9"
+    "wagmi": "^2.16.9",
+    "react-window": "^1.8.10",
+    "react-use": "^17.5.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
