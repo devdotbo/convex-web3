@@ -5,6 +5,7 @@ import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { headers } from "next/headers";
 import ContextProvider from "@/context";
 import AuthWatcher from "@/components/AuthWatcher";
+import Script from "next/script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,6 +38,19 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Script id="disable-lit-warnings" strategy="beforeInteractive">
+          {`
+            try {
+              // Silence Lit dev and multiple-version warnings in development
+              // See https://lit.dev/msg/multiple-versions and dev-mode notice
+              // These globals are no-ops for production builds
+              // @ts-ignore
+              window.litDisableDevMode = true;
+              // @ts-ignore
+              window.litHtmlPolyfillSupport = () => {};
+            } catch {}
+          `}
+        </Script>
         <ContextProvider cookies={cookies}>
           <ConvexClientProvider>
             <AuthWatcher />
