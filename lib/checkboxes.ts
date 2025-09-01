@@ -29,4 +29,11 @@ export const shiftBit = (
   return view;
 };
 
+export function ensureArrayBuffer(bufLike: ArrayBufferLike): ArrayBuffer {
+  if (bufLike instanceof ArrayBuffer) return bufLike;
+  const copy = new ArrayBuffer(bufLike.byteLength);
+  new Uint8Array(copy).set(new Uint8Array(bufLike));
+  return copy;
+}
+
 

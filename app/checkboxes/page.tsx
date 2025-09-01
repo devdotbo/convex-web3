@@ -6,15 +6,19 @@ import { api } from "@/convex/_generated/api";
 import { useEffect, useMemo } from "react";
 import { useMeasure } from "react-use";
 import Link from "next/link";
-import { NUM_BOXES, NUM_DOCUMENTS, isChecked, shiftBit } from "@/lib/checkboxes";
+import { useAppKitAccount } from "@reown/appkit/react";
+import { NUM_BOXES, NUM_DOCUMENTS, isChecked, shiftBit, ensureArrayBuffer } from "@/lib/checkboxes";
 
 export default function CheckboxesPage() {
   const [ref, { width, height }] = useMeasure<HTMLDivElement>();
   const ensureSeeded = useMutation(api.checkboxes.ensureSeeded);
+  const { isConnected } = useAppKitAccount();
 
   useEffect(() => {
-    void ensureSeeded({});
-  }, [ensureSeeded]);
+    if (isConnected) {
+      void ensureSeeded({});
+    }
+  }, [ensureSeeded, isConnected]);
 
   const queries = useMemo(
     () =>
@@ -63,6 +67,11 @@ export default function CheckboxesPage() {
           <Link href="/">Back</Link>
         </div>
       </div>
+      {!isConnected && (
+        <div style={{ padding: "0.5rem" }}>
+          Please connect your wallet to toggle checkboxes.
+        </div>
+      )}
       <div style={{ width: "100%", height: "100%", flexGrow: 1 }} ref={ref}>
         <Grid
           columnCount={numColumns}
@@ -104,18 +113,20 @@ function Cell({
   const toggle = useMutation(api.checkboxes.toggle).withOptimisticUpdate((localStore) => {
     const currentValue = localStore.getQuery(api.checkboxes.get, { documentIdx });
     if (currentValue !== undefined && currentValue !== null) {
-      const localView = new Uint8Array(currentValue);
+      const localView = new Uint8Array(ensureArrayBuffer(currentValue));
       const newBytes = shiftBit(localView, arrayIdx, !currentlyChecked)?.buffer;
       if (newBytes) {
-        localStore.setQuery(api.checkboxes.get, { documentIdx }, newBytes);
+        localStore.setQuery(api.checkboxes.get, { documentIdx }, ensureArrayBuffer(newBytes));
       }
     }
   });
+  const { isConnected } = useAppKitAccount();
 
   if (index >= NUM_BOXES) {
     return null;
   }
   const onClick = () => {
+    if (!isConnected) return;
     void toggle({ documentIdx, arrayIdx, checked: !currentlyChecked });
   };
   return (
@@ -124,7 +135,7 @@ function Cell({
         style={{ margin: "0.25rem", cursor: isLoading ? undefined : "pointer", width: "24px", height: "24px", padding: "8px" }}
         type="checkbox"
         checked={!!currentlyChecked}
-        disabled={isLoading}
+        disabled={isLoading || !isConnected}
         onChange={onClick}
       />
     </div>
