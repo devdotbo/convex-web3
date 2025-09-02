@@ -9,6 +9,7 @@ export default function AuthWatcher() {
   const events = useAppKitEvents();
   const syncingRef = useRef(false);
   const prevCaipRef = useRef<string | undefined>(undefined);
+  const prevConnectedRef = useRef<boolean | null>(null);
 
   useEffect(() => {
     if (syncingRef.current) return;
@@ -17,13 +18,17 @@ export default function AuthWatcher() {
     const sync = async () => {
       const current = caipAddress || (address ? `eip155:${address}` : undefined);
 
-      // 1) If fully disconnected, clear auth immediately
+      // 1) Only clear auth on a real disconnect transition (was connected -> now disconnected)
+      const wasConnected = prevConnectedRef.current === true;
       if (!isConnected) {
-        await convex.setAuth(async () => null);
-        try {
-          await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-        } catch {}
-        prevCaipRef.current = undefined;
+        if (wasConnected) {
+          await convex.setAuth(async () => null);
+          try {
+            await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+          } catch {}
+          prevCaipRef.current = undefined;
+        }
+        prevConnectedRef.current = isConnected;
         syncingRef.current = false;
         return;
       }
@@ -48,6 +53,7 @@ export default function AuthWatcher() {
           }
         });
       }
+      prevConnectedRef.current = isConnected;
       syncingRef.current = false;
     };
 
