@@ -9,7 +9,8 @@
     "predev": "convex dev --until-success && convex dashboard",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint . --max-warnings=0"
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@reown/appkit": "^1.8.1",
