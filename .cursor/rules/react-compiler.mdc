@@ -1,0 +1,82 @@
+---
+alwaysApply: true
+---
+# React Compiler rules (project-wide)
+
+- **Mode**: Prefer global compilation mode; avoid annotation mode unless explicitly needed.
+- **React version**: Keep in sync with Next canary or React canary only if necessary; otherwise track stable and disable compiler features that break.
+- **Enablement**: In Next, set `experimental.reactCompiler: true` in `next.config.ts`.
+
+## Authoring rules to help the compiler
+
+- **Stable keys**: Never use array index as `key`. Use stable identifiers (e.g., `id` or unique `name`).
+- **Extract unstable children**: If a list item renders complex children, extract a child component (`ItemRow`) so the compiler can memoize internals.
+- **Functions from hooks**: When a hook returns an object containing a stable callback, destructure the stable function and depend on it (e.g., `{ mutate } = useMutation(...)` and use `mutate` in `useCallback` deps).
+- **Avoid ad-hoc objects/arrays in props**: Hoist or `useMemo` objects/arrays passed as props if they are recreated every render and cause churn.
+- **Event handlers**: Prefer defining handlers with `useCallback` when they are passed multiple levels down or used in dependency arrays.
+- **Children as elements**: When passing JSX as children to heavy components, extract to a component so it can be independently memoized.
+- **Keys + lists**: Changing list order requires stable keys to avoid full subtree re-renders.
+
+## When to keep manual memoization
+
+- Keep `React.memo` on components that are known hot paths or when compiler cannot avoid re-renders (validated via React DevTools Profiler).
+- Use `useMemo` for expensive computations, normalization, or derived data. The compiler does not optimize CPU-heavy work.
+- Use `useCallback` for stable identity where third-party libs depend on referential equality.
+
+## Debugging guidance
+
+- Verify actual renders with React DevTools Profiler; "memo ✨" indicators may not reflect all cases.
+- If a subtree still re-renders:
+  - Replace `index` keys with stable keys.
+  - Extract the row/cell into a dedicated component.
+  - Replace object dependency with a stable member (e.g., use `mutate` not the whole object).
+  - Hoist constants and inline literals used in props.
+
+## CI and linting
+
+- Enforce `eslint-plugin-react-hooks` and compiler-friendly patterns.
+- Add lint to forbid `key={index}` in non-static lists.
+
+## References
+
+- DeveloperWay: I tried React Compiler today — insights on real-world pitfalls and fixes. https://www.developerway.com/posts/i-tried-react-compiler
+- React docs: React Compiler overview and installation. https://react.dev/learn/react-compiler# React Compiler rules (project-wide)
+
+- **Mode**: Prefer global compilation mode; avoid annotation mode unless explicitly needed.
+- **React version**: Keep in sync with Next canary or React canary only if necessary; otherwise track stable and disable compiler features that break.
+- **Enablement**: In Next, set `experimental.reactCompiler: true` in `next.config.ts`.
+
+## Authoring rules to help the compiler
+
+- **Stable keys**: Never use array index as `key`. Use stable identifiers (e.g., `id` or unique `name`).
+- **Extract unstable children**: If a list item renders complex children, extract a child component (`ItemRow`) so the compiler can memoize internals.
+- **Functions from hooks**: When a hook returns an object containing a stable callback, destructure the stable function and depend on it (e.g., `{ mutate } = useMutation(...)` and use `mutate` in `useCallback` deps).
+- **Avoid ad-hoc objects/arrays in props**: Hoist or `useMemo` objects/arrays passed as props if they are recreated every render and cause churn.
+- **Event handlers**: Prefer defining handlers with `useCallback` when they are passed multiple levels down or used in dependency arrays.
+- **Children as elements**: When passing JSX as children to heavy components, extract to a component so it can be independently memoized.
+- **Keys + lists**: Changing list order requires stable keys to avoid full subtree re-renders.
+
+## When to keep manual memoization
+
+- Keep `React.memo` on components that are known hot paths or when compiler cannot avoid re-renders (validated via React DevTools Profiler).
+- Use `useMemo` for expensive computations, normalization, or derived data. The compiler does not optimize CPU-heavy work.
+- Use `useCallback` for stable identity where third-party libs depend on referential equality.
+
+## Debugging guidance
+
+- Verify actual renders with React DevTools Profiler; "memo ✨" indicators may not reflect all cases.
+- If a subtree still re-renders:
+  - Replace `index` keys with stable keys.
+  - Extract the row/cell into a dedicated component.
+  - Replace object dependency with a stable member (e.g., use `mutate` not the whole object).
+  - Hoist constants and inline literals used in props.
+
+## CI and linting
+
+- Enforce `eslint-plugin-react-hooks` and compiler-friendly patterns.
+- Add lint to forbid `key={index}` in non-static lists.
+
+## References
+
+- DeveloperWay: I tried React Compiler today — insights on real-world pitfalls and fixes. https://www.developerway.com/posts/i-tried-react-compiler
+- React docs: React Compiler overview and installation. https://react.dev/learn/react-compiler
