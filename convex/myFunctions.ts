@@ -41,7 +41,8 @@ export const addNumber = authedMutation({
 
   // Mutation implementation.
   handler: async (ctx, args) => {
-    requireUser((ctx as any).userIdentity);
+    // The custom input middleware attaches `userIdentity` onto ctx in `authedMutation`
+    requireUser((ctx as unknown as { userIdentity: unknown }).userIdentity);
 
     const id = await ctx.db.insert("numbers", { value: args.value });
 

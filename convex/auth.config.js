@@ -5,7 +5,7 @@ if (!jwksUrl) {
   );
 }
 
-export default {
+const config = {
   providers: [
     {
       type: "customJwt",
@@ -16,5 +16,7 @@ export default {
     },
   ],
 };
+
+export default config;
 
 

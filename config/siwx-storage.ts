@@ -60,8 +60,9 @@ export class JwtCookieStorage implements SIWXStorage {
   }
 
   async get(chainId: string, address: string): Promise<SIWXSession[]> {
-    // Cast to any to avoid importing appkit-core types
-    return this.local.get(chainId as any, address)
+    // Avoid importing appkit-core types by widening the `chainId` parameter type to `unknown` in a local call-site cast.
+    const get = (this.local as unknown as { get: (c: unknown, a: string) => Promise<SIWXSession[]> }).get
+    return get(chainId, address)
   }
 
   async delete(chainId: string, address: string): Promise<void> {

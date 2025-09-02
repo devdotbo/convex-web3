@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { query, internalMutation } from "./_generated/server";
+import type { DatabaseWriter, MutationCtx } from "./_generated/server";
 import { api, internal } from "./_generated/api";
 import { authedMutation, requireUser } from "./custom";
 const NUM_BOXES = 1000000;
@@ -68,7 +69,8 @@ export const toggle = authedMutation({
     if (arrayIdx < 0 || arrayIdx >= BOXES_PER_DOCUMENT) {
       throw new Error("arrayIdx out of range");
     }
-    const checkbox = await ctx.db
+    const db = ctx.db as unknown as DatabaseWriter;
+    const checkbox = await db
       .query("checkboxes")
       .withIndex("idx", (q) => q.eq("idx", documentIdx))
       .first();
@@ -83,7 +85,7 @@ export const toggle = authedMutation({
 
     if (newBytesLike) {
       const newBytes = toArrayBuffer(newBytesLike);
-      await ctx.db.patch(checkbox._id, {
+      await db.patch(checkbox._id, {
         idx: checkbox.idx,
         boxes: newBytes,
       });
@@ -97,12 +99,14 @@ export const ensureSeeded = authedMutation({
   returns: v.null(),
   handler: async (ctx) => {
     requireUser(ctx.userIdentity);
-    const exists = await ctx.db
+    const db = ctx.db as unknown as DatabaseWriter;
+    const exists = await db
       .query("checkboxes")
       .withIndex("idx", (q) => q.eq("idx", 0))
       .first();
     if (!exists) {
-      await ctx.runMutation(internal.checkboxes.seed, {});
+      const core = ctx as unknown as MutationCtx;
+      await core.runMutation(internal.checkboxes.seed, {});
     }
     return null;
   },
@@ -112,18 +116,19 @@ export const seed = internalMutation({
   args: {},
   returns: v.null(),
   handler: async (ctx) => {
-    const boxes = await ctx.db
+    const db = ctx.db as unknown as DatabaseWriter;
+    const boxes = await db
       .query("checkboxes")
       .withIndex("idx")
       .order("asc")
       .collect();
     for (const box of boxes) {
-      await ctx.db.delete(box._id);
+      await db.delete(box._id);
     }
 
     const bytes = new Uint8Array(BOXES_PER_DOCUMENT / 8);
     for (let i = 0; i < NUM_DOCUMENTS; i++) {
-      await ctx.db.insert("checkboxes", {
+      await db.insert("checkboxes", {
         idx: i,
         boxes: bytes.buffer,
       });
@@ -139,7 +144,8 @@ export const toggleRandom = internalMutation({
     for (let i = 0; i < 10; i++) {
       const documentIdx = Math.floor(Math.random() * NUM_DOCUMENTS);
       const arrayIdx = Math.floor(Math.random() * 2);
-      const box = await ctx.db
+      const db = ctx.db as unknown as DatabaseWriter;
+      const box = await db
         .query("checkboxes")
         .withIndex("idx", (q) => q.eq("idx", documentIdx))
         .first();
